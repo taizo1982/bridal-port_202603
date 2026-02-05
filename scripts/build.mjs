@@ -539,7 +539,14 @@ async function processImages(html, dimensions, basePath = "", spImages = new Set
   const prefix = basePath ? basePath.replace(/\/$/, "") : "";
   const warnings = [];
 
-  // <img>タグを処理
+  // 1. 既存の<picture>要素を保護（ネスト防止）
+  const pictureBlocks = [];
+  html = html.replace(/<picture[\s\S]*?<\/picture>/gi, (match) => {
+    pictureBlocks.push(match);
+    return `__PICTURE_PLACEHOLDER_${pictureBlocks.length - 1}__`;
+  });
+
+  // 2. <img>タグを処理（既存の<picture>内の<img>は除外済み）
   const imgRegex = /<img([^>]*)src=["']([^"']+)["']([^>]*)>/gi;
 
   html = html.replace(imgRegex, (match, before, src, after) => {
@@ -617,6 +624,11 @@ async function processImages(html, dimensions, basePath = "", spImages = new Set
     }
 
     return `<img${newBefore}src="${src}"${newAfter}>`;
+  });
+
+  // 3. プレースホルダーを復元（既存の<picture>要素を元に戻す）
+  pictureBlocks.forEach((block, i) => {
+    html = html.replace(`__PICTURE_PLACEHOLDER_${i}__`, block);
   });
 
   return { html, warnings };
@@ -718,7 +730,7 @@ async function build() {
   await fs.rm(buildDir, { recursive: true, force: true });
   await fs.mkdir(buildDir, { recursive: true });
 
-  // images/ をコピー
+  // images/ をコピーして最適化
   const imagesDir = path.join(srcDir, "images");
   let spImages = new Set();
   try {
@@ -726,10 +738,69 @@ async function build() {
     await copyDir(imagesDir, path.join(buildDir, "images"));
     // SP画像を検出
     spImages = await findSpImages(srcDir);
+
+    // 画像をリサイズ＆AVIF/WebPに変換
+    const buildImagesDir = path.join(buildDir, "images");
+    const imageFiles = await fs.readdir(buildImagesDir);
+
+    // 画像の最大幅を設定
+    const maxWidths = {
+      'main': 1600,
+      'hiyoshi': 1200,
+      'takebe': 800,
+      'tachiki': 800,
+      'ono': 800,
+      'mikami': 800,
+      'hyozu': 800,
+      'kaisyoku': 1200,
+      'kituke': 1200,
+    };
+    const defaultMaxWidth = 1200;
+
+    for (const file of imageFiles) {
+      const ext = path.extname(file).toLowerCase();
+      if ([".png", ".jpg", ".jpeg"].includes(ext)) {
+        const inputPath = path.join(buildImagesDir, file);
+        const baseName = file.replace(/\.(png|jpe?g)$/i, "");
+        const maxWidth = maxWidths[baseName] || defaultMaxWidth;
+
+        try {
+          const image = sharp(inputPath);
+          const metadata = await image.metadata();
+
+          // リサイズが必要な場合のみリサイズ
+          const needsResize = metadata.width > maxWidth;
+          const resizedImage = needsResize
+            ? image.resize(maxWidth, null, { withoutEnlargement: true })
+            : image;
+
+          // 元画像を圧縮して上書き
+          if (ext === '.png') {
+            await resizedImage.png({ quality: 85, compressionLevel: 9 }).toFile(inputPath + '.tmp');
+          } else {
+            await resizedImage.jpeg({ quality: 85 }).toFile(inputPath + '.tmp');
+          }
+          await fs.rename(inputPath + '.tmp', inputPath);
+
+          // WebP生成
+          await sharp(inputPath)
+            .webp({ quality: 80 })
+            .toFile(path.join(buildImagesDir, `${baseName}.webp`));
+
+          // AVIF生成
+          await sharp(inputPath)
+            .avif({ quality: 60 })
+            .toFile(path.join(buildImagesDir, `${baseName}.avif`));
+        } catch (imgError) {
+          console.log(`  Warning: Could not optimize ${file}: ${imgError.message}`);
+        }
+      }
+    }
+
     if (spImages.size > 0) {
-      console.log(`✓ Images copied (${spImages.size} SP images detected)`);
+      console.log(`✓ Images copied and optimized (${spImages.size} SP images detected)`);
     } else {
-      console.log("✓ Images copied");
+      console.log("✓ Images copied and optimized");
     }
   } catch {
     console.log("  No images directory");

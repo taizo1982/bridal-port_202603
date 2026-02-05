@@ -218,53 +218,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ==========================================================================
-  // Pricing Card Number Animation
-  // ==========================================================================
-
-  const priceNumbers = document.querySelectorAll('.price-number');
-
-  if (priceNumbers.length > 0) {
-    const priceObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const el = entry.target;
-          const finalValue = parseInt(el.textContent.replace(/,/g, ''), 10);
-          animateNumber(el, 0, finalValue, 1500);
-          priceObserver.unobserve(el);
-        }
-      });
-    }, {
-      threshold: 0.5
-    });
-
-    priceNumbers.forEach(el => {
-      priceObserver.observe(el);
-    });
-  }
-
-  function animateNumber(element, start, end, duration) {
-    const startTime = performance.now();
-    const formatter = new Intl.NumberFormat('ja-JP');
-
-    function update(currentTime) {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Ease out cubic
-      const easeOut = 1 - Math.pow(1 - progress, 3);
-      const currentValue = Math.round(start + (end - start) * easeOut);
-
-      element.textContent = formatter.format(currentValue);
-
-      if (progress < 1) {
-        requestAnimationFrame(update);
-      }
-    }
-
-    requestAnimationFrame(update);
-  }
-
-  // ==========================================================================
   // Mobile Touch Interactions
   // ==========================================================================
 

@@ -69,6 +69,14 @@ a {
   text-decoration: none;
 }
 
+/* Focus styles for accessibility */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--color-ai);
+  outline-offset: 2px;
+}
+
 ul, ol {
   list-style: none;
 }
@@ -203,9 +211,9 @@ ul, ol {
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(248, 245, 240, 0.2) 0%,
-    rgba(248, 245, 240, 0.5) 40%,
-    rgba(248, 245, 240, 0.92) 100%
+    rgba(248, 245, 240, 0.4) 0%,
+    rgba(248, 245, 240, 0.7) 40%,
+    rgba(248, 245, 240, 0.95) 100%
   );
   z-index: 1;
 }
@@ -375,6 +383,8 @@ section {
   line-height: 1.5;
   letter-spacing: 0.08em;
   color: var(--color-sumi);
+  word-break: keep-all;
+  overflow-wrap: normal;
 }
 
 .section-lead {
@@ -599,7 +609,9 @@ section {
    ========================================================================== */
 
 .service {
-  background-color: var(--color-kinari);
+  position: relative;
+  background: linear-gradient(rgba(248, 245, 240, 0.8), rgba(248, 245, 240, 0.8)),
+              url('images/kituke.png') center/cover no-repeat fixed;
 }
 
 .service-grid {
@@ -792,7 +804,9 @@ section {
    ========================================================================== */
 
 .venue {
-  background-color: var(--color-kinari);
+  position: relative;
+  background: linear-gradient(rgba(248, 245, 240, 0.75), rgba(248, 245, 240, 0.75)),
+              url('images/kaisyoku.png') center/cover no-repeat fixed;
 }
 
 .venue-grid {
@@ -1342,6 +1356,97 @@ section {
 }
 
 /* ==========================================================================
+   Access Section
+   ========================================================================== */
+
+.access {
+  background-color: var(--color-kinari);
+}
+
+.access-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.access-map {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(182, 141, 76, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.access-map img {
+  width: 100%;
+  height: auto;
+}
+
+.access-info {
+  background-color: var(--color-shironeri);
+  padding: var(--space-md);
+  border-radius: 12px;
+  border: 1px solid rgba(182, 141, 76, 0.1);
+}
+
+.access-details {
+  margin-bottom: var(--space-md);
+}
+
+.access-details dt {
+  font-family: var(--font-mincho);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-kincha);
+  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+}
+
+.access-details dd {
+  font-size: 0.9375rem;
+  margin-bottom: var(--space-sm);
+  line-height: 1.7;
+  color: var(--color-sumi);
+}
+
+.access-details dd:last-child {
+  margin-bottom: 0;
+}
+
+.access-details a {
+  color: var(--color-ai);
+  font-weight: 500;
+}
+
+.access-features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: var(--space-sm);
+  border-top: 1px solid rgba(182, 141, 76, 0.15);
+}
+
+.access-features li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--color-sumi);
+}
+
+.access-features svg {
+  flex-shrink: 0;
+  color: var(--color-kincha);
+}
+
+@media (max-width: 768px) {
+  .access-content {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+}
+
+/* ==========================================================================
    Final CTA Section
    ========================================================================== */
 
@@ -1432,6 +1537,16 @@ section {
 }
 
 .footer-tel a:hover {
+  opacity: 1;
+}
+
+.footer-website a {
+  font-size: 0.875rem;
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+.footer-website a:hover {
   opacity: 1;
 }
 
